@@ -1,6 +1,6 @@
-?start : (select | create_database | create_table) _SEMICOLON _SEP? -> request
+?start : (select | create_database_or_schema | create_table) _SEMICOLON _SEP? -> request
 
-?create_table : "create"i _SEP ("external"i _SEP)? "table"i _SEP ("IF NOT EXISTS" _SEP)? VARNAME table_clause? comment_clause? partition_clause? clusteredby_clause? stored_clause? location_clause? tblproperties_clause? as_clause?
+?create_table : "create"i _SEP ("external"i _SEP)? "table"i _SEP ifnotexists_clause? VARNAME table_clause? comment_clause? partition_clause? clusteredby_clause? stored_clause? location_clause? tblproperties_clause? as_clause?
 table_clause : _SEP? "(" _SEP? table_fields _SEP? ")"
 table_fields : table_field ("," _SEP? table_field)*
 table_field : VARNAME _SEP? (":" _SEP?)? VARTYPE comment_clause?
@@ -11,8 +11,9 @@ stored_clause : _SEP "stored"i _SEP "as"i _SEP VARNAME
 tblproperties_clause : _SEP "TBLPROPERTIES"i _SEP? "(" equality_pairs ")"
 as_clause : _SEP "as"i _SEP select_statement
 
-?create_database : "create"i _SEP ("database"i|"schema"i) _SEP ("IF NOT EXISTS" _SEP)? VARNAME comment_clause? location_clause? properties_clause?
+?create_database_or_schema : "create"i _SEP (DATABASE|SCHEMA) _SEP ifnotexists_clause? VARNAME comment_clause? location_clause? properties_clause?
 
+ifnotexists_clause : "IF NOT EXISTS" _SEP
 comment_clause : _SEP "comment"i _SEP VALUE
 location_clause : _SEP "location"i _SEP VALUE
 properties_clause : _SEP "with"i _SEP "DBPROPERTIES"i _SEP? "(" equality_pairs ")"
@@ -61,6 +62,8 @@ FUNCTION : VARNAME _SEP? "(" VARNAME ")"
 FIELDS : EVERYTHING | (ITEM (_SEP "as"i _SEP ITEM)? ("," _SEP? ITEM (_SEP "as"i _SEP ITEM)?)*)
 SIMPLE_VARTYPE : "BOOLEAN" | "BYTE" | "TINYINT" | "SHORT" | "SMALLINT" | "INT" | "INTEGER" | "LONG" | "BIGINT" | "FLOAT" | "REAL" | "DOUBLE" | "DATE" | "TIMESTAMP" | "STRING" (_SEP? "(" POSITIVE_INT ")")? | "BINARY" (_SEP? "(" POSITIVE_INT ")")? | "DECIMAL" | "DEC" | "NUMERIC"
 VARTYPE : SIMPLE_VARTYPE | "ARRAY<"i SIMPLE_VARTYPE ">" | "STRUCT<"i VARNAME (_SEP? ":")? _SEP SIMPLE_VARTYPE ("," _SEP? VARNAME (_SEP? ":")? _SEP SIMPLE_VARTYPE)*">" | "MAP<"i SIMPLE_VARTYPE _SEP? "," _SEP? SIMPLE_VARTYPE ">"
+DATABASE : "DATABASE"
+SCHEMA : "SCHEMA"
 
 // Should work:
 // https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select.html

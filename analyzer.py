@@ -1,4 +1,4 @@
-from lark import Lark,UnexpectedInput
+from lark import Lark, UnexpectedInput
 
 
 class Analyzer:

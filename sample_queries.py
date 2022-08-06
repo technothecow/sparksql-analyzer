@@ -76,5 +76,10 @@ SELECT last_name FROM employee;''',
     CLUSTERED BY (ID, NAME)
     SORTED BY (ID ASC)
     INTO 3 BUCKETS
-    STORED AS PARQUET;'''
+    STORED AS PARQUET;''',
+    '''CReatE DATABASE IF NOT EXISTS db_name 
+    COMMENT 'sample comment'
+    LOCATION 'path/to/the/file.db'
+    with DBPROPERTIES(prop1=val1,prop2=val2);
+    '''
 ]
