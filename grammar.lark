@@ -1,19 +1,30 @@
 ?start : (select | create_database | create_table) _SEMICOLON _SEP? -> request
 
-?create_table : "create"i _SEP "table"i
+?create_table : "create"i _SEP ("external"i _SEP)? "table"i _SEP ("IF NOT EXISTS" _SEP)? VARNAME table_clause? comment_clause? partition_clause? clusteredby_clause? stored_clause? location_clause? tblproperties_clause? as_clause?
+table_clause : _SEP? "(" _SEP? table_fields _SEP? ")"
+table_fields : table_field ("," _SEP? table_field)*
+table_field : VARNAME _SEP? (":" _SEP?)? VARTYPE comment_clause?
+partition_clause : _SEP "PARTITIONED"i _SEP "BY"i _SEP "(" _SEP? (table_fields|VARNAMES) _SEP? ")"
+clusteredby_clause : _SEP "CLUSTERED"i _SEP "BY"i _SEP "(" _SEP? VARNAMES _SEP? ")" sortedby_clause? _SEP "INTO"i _SEP POSITIVE_INT _SEP "BUCKETS"
+sortedby_clause : _SEP "sorted"i _SEP "by"i _SEP "(" _SEP? orderby_items _SEP? ")"
+stored_clause : _SEP "stored"i _SEP "as"i _SEP VARNAME
+tblproperties_clause : _SEP "TBLPROPERTIES"i _SEP? "(" equality_pairs ")"
+as_clause : _SEP "as"i _SEP select_statement
 
 ?create_database : "create"i _SEP ("database"i|"schema"i) _SEP ("IF NOT EXISTS" _SEP)? VARNAME comment_clause? location_clause? properties_clause?
 
 comment_clause : _SEP "comment"i _SEP VALUE
 location_clause : _SEP "location"i _SEP VALUE
-properties_clause : _SEP "with"i _SEP "DBPROPERTIES"i _SEP? "("equality_pair ("," _SEP? equality_pair)*")"
-equality_pair : _SEP? VARNAME _SEP? "=" _SEP? VALUE _SEP?
+properties_clause : _SEP "with"i _SEP "DBPROPERTIES"i _SEP? "(" equality_pairs ")"
+equality_pair : _SEP? VALUE _SEP? "=" _SEP? VALUE _SEP?
+equality_pairs : equality_pair ("," _SEP? equality_pair)*
 
 ?select : ( "with"i _SEP with_query ("," _SEP? with_query)* _SEP )? select_statement (_SEP ("UNION"|"INTERSECT"|"EXCEPT") _SEP select_statement)* orderby_clause? sortby_clause? clusterby_clause? distributeby_clause? limit_clause?
 
-orderby_clause : _SEP "order by"i _SEP orderby_item ("," _SEP? orderby_item)*
+orderby_clause : _SEP "order by"i _SEP orderby_items
 orderby_item : ITEM (_SEP ("ASC"i|"DESC"i))? (_SEP "NULLS"i _SEP ("FIRST"i|"LAST"i))?
-sortby_clause : _SEP "sort by"i _SEP orderby_item ("," _SEP? orderby_item)*
+orderby_items : orderby_item ("," _SEP? orderby_item)*
+sortby_clause : _SEP "sort by"i _SEP orderby_items
 clusterby_clause : _SEP "cluster by"i ITEMS
 distributeby_clause : _SEP "distribute by"i ITEMS
 limit_clause : _SEP "LIMIT"i _SEP ("ALL"i|VALUE)
@@ -37,7 +48,7 @@ boolean_expression : (logical_or _SEP?)+
 ?var :  _SEP? (VALUE | "(" _SEP? sum _SEP? ")") _SEP?
 
 VARNAME : ("_" | ("a".."z") | ("A".."Z") | ("0".."9") | ".")+
-VALUE : VARNAME | NUMBER | FUNCTION | "'"VARNAME"'"
+VALUE : VARNAME | NUMBER | FUNCTION | "'"("/" | "\\" | " " | "_" | ("a".."z") | ("A".."Z") | ("0".."9") | ".")+"'"
 VARNAMES : VARNAME ("," _SEP? VARNAME)*
 ITEM : VARNAME | FUNCTION
 POSITIVE_INT : ("0".."9")+
@@ -48,3 +59,10 @@ _SEP : ("\n" | " ")+
 ITEMS : ITEM ("," _SEP? ITEM)*
 FUNCTION : VARNAME _SEP? "(" VARNAME ")"
 FIELDS : EVERYTHING | (ITEM (_SEP "as"i _SEP ITEM)? ("," _SEP? ITEM (_SEP "as"i _SEP ITEM)?)*)
+SIMPLE_VARTYPE : "BOOLEAN" | "BYTE" | "TINYINT" | "SHORT" | "SMALLINT" | "INT" | "INTEGER" | "LONG" | "BIGINT" | "FLOAT" | "REAL" | "DOUBLE" | "DATE" | "TIMESTAMP" | "STRING" (_SEP? "(" POSITIVE_INT ")")? | "BINARY" (_SEP? "(" POSITIVE_INT ")")? | "DECIMAL" | "DEC" | "NUMERIC"
+VARTYPE : SIMPLE_VARTYPE | "ARRAY<"i SIMPLE_VARTYPE ">" | "STRUCT<"i VARNAME (_SEP? ":")? _SEP SIMPLE_VARTYPE ("," _SEP? VARNAME (_SEP? ":")? _SEP SIMPLE_VARTYPE)*">" | "MAP<"i SIMPLE_VARTYPE _SEP? "," _SEP? SIMPLE_VARTYPE ">"
+
+// Should work:
+// https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select.html
+// https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-database.html
+// https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-hiveformat.html

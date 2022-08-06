@@ -52,5 +52,29 @@ FROM product;''',
 INTERSECT
 
 SELECT last_name FROM employee;''',
-    "CREATE DATABASE test_db COMMENT '123' LOCATION 'test_db.sparksql' WITH DBPROPERTIES(good=True);"
+    'CREATE DATABASE test_db COMMENT \'123\' LOCATION \'test_db.sparksql\' WITH DBPROPERTIES(good=True);',
+    '''CREATE TABLE student (id INT, name STRING, age INT) STORED AS ORC;''',
+    '''CREATE TABLE student_copy STORED AS ORC
+    AS SELECT * FROM student;''',
+    '''CREATE TABLE student (id INT, name STRING, age INT)
+    COMMENT 'this is a comment'
+    STORED AS ORC
+    TBLPROPERTIES ('foo'='bar');''',
+    '''CREATE TABLE student (id INT, name STRING)
+    PARTITIONED BY (age INT)
+    STORED AS ORC;''',
+    '''CREATE EXTERNAL TABLE family(
+        name STRING,
+        friends ARRAY<STRING>,
+        children MAP<STRING, INT>,
+        address STRUCT<street: STRING, city: STRING>
+    )
+    STORED AS TEXTFILE
+    LOCATION '/tmp/family/';''',
+    '''CREATE TABLE clustered_by_test2 (ID INT, NAME STRING)
+    PARTITIONED BY (YEAR STRING)
+    CLUSTERED BY (ID, NAME)
+    SORTED BY (ID ASC)
+    INTO 3 BUCKETS
+    STORED AS PARQUET;'''
 ]
