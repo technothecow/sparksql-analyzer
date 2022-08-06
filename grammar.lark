@@ -1,10 +1,12 @@
-?start : (select | create_database) _SEMICOLON _SEP? -> request
+?start : (select | create_database | create_table) _SEMICOLON _SEP? -> request
+
+?create_table : "create"i _SEP "table"i
 
 ?create_database : "create"i _SEP ("database"i|"schema"i) _SEP ("IF NOT EXISTS" _SEP)? VARNAME comment_clause? location_clause? properties_clause?
 
-comment_clause : "comment"i _SEP VALUE
-location_clause : "location"i _SEP VALUE
-properties_clause : "with"i _SEP "DBPROPERTIES"i _SEP? "("equality_pair ("," _SEP? equality_pair)*")"
+comment_clause : _SEP "comment"i _SEP VALUE
+location_clause : _SEP "location"i _SEP VALUE
+properties_clause : _SEP "with"i _SEP "DBPROPERTIES"i _SEP? "("equality_pair ("," _SEP? equality_pair)*")"
 equality_pair : _SEP? VARNAME _SEP? "=" _SEP? VALUE _SEP?
 
 ?select : ( "with"i _SEP with_query ("," _SEP? with_query)* _SEP )? select_statement (_SEP ("UNION"|"INTERSECT"|"EXCEPT") _SEP select_statement)* orderby_clause? sortby_clause? clusterby_clause? distributeby_clause? limit_clause?

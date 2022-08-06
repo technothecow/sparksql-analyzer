@@ -51,5 +51,6 @@ FROM product;''',
 
 INTERSECT
 
-SELECT last_name FROM employee;'''
+SELECT last_name FROM employee;''',
+    "CREATE DATABASE test_db COMMENT '123' LOCATION 'test_db.sparksql' WITH DBPROPERTIES(good=True);"
 ]
