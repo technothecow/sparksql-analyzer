@@ -1,4 +1,4 @@
 from analyzer import Analyzer
 
-a=Analyzer()
-print(a.analyze('a=10+20'))
+a=Analyzer('grammar.lark')
+print(a.analyze('SELECT a, b FROM c WHERE a>b;'))
