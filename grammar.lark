@@ -1,19 +1,40 @@
-?start : (selection_part) SEMICOLON -> request
+?start : (select) _SEMICOLON -> request
 
-selection_part : "select "i selectable from_part?
-selectable : EVERYTHING | NAME ("," NAME | ", " NAME)*
-from_part : " from "i selectable where_part?
-where_part : " where "i condition_part
-?condition_part : logical_or+
+?select : ( "with"i _SEP with_query ("," _SEP? with_query)* _SEP )? select_statement (_SEP ("UNION"|"INTERSECT"|"EXCEPT") (_SEP ("ALL"|"DISTINCT"))? _SEP select_statement)* orderby_clause? sortby_clause? clusterby_clause? distributeby_clause? limit_clause?
+
+orderby_clause : _SEP "order by"i _SEP orderby_item ("," _SEP? orderby_item)*
+orderby_item : ITEM (_SEP ("ASC"i|"DESC"i))? (_SEP "NULLS"i _SEP ("FIRST"i|"LAST"i))?
+sortby_clause : _SEP "sort by"i _SEP orderby_item ("," _SEP? orderby_item)*
+clusterby_clause : _SEP "cluster by"i ITEMS
+distributeby_clause : _SEP "distribute by"i ITEMS
+limit_clause : _SEP "LIMIT"i _SEP ("ALL"i|VALUE)
+
+?with_query : ITEM _SEP? "(" ITEM ") as (" _SEP? select_statement _SEP? ")"
+?select_statement : field_selection_clause _SEP from_clause? where_clause? groupby_clause? having_clause?
+field_selection_clause : "select"i _SEP (EVERYTHING | ITEMS)
+from_clause : "from"i _SEP VARNAMES
+where_clause : _SEP "where"i _SEP boolean_expression
+groupby_clause : _SEP "group by"i _SEP ITEMS
+having_clause : _SEP "where"i _SEP boolean_expression
+
+
+boolean_expression : logical_or+
 ?logical_or : logical_and ("or" logical_and)*
 ?logical_and : logical_equality ("and" logical_equality)*
 ?logical_equality : logical_comparison (("==" | "!=") logical_comparison)*
 ?logical_comparison : sum (("<=" | "<" | ">=" | ">") sum)*
 ?sum : product (("+"|"-") product)*
 ?product : var (("*"|"/") var)*
-?var : NAME | NUMBER | "(" sum ")"
+?var : FUNCTION | VARNAME | NUMBER | "(" sum ")"
 
-NAME : ("_" | ("a".."z") | ("A".."Z") | ("0".."9"))+
-NUMBER : "-"? ("0".."9")+
-SEMICOLON : ";"
+VARNAME : ("_" | ("a".."z") | ("A".."Z") | ("0".."9") | ".")+
+VALUE : VARNAME | NUMBER | FUNCTION
+VARNAMES : VARNAME ("," _SEP? VARNAME)*
+ITEM : VARNAME | FUNCTION
+POSITIVE_INT : ("0".."9")+
+NUMBER : "-"? POSITIVE_INT
+_SEMICOLON : ";"
 EVERYTHING : "*"
+_SEP : ("\n" | " ")
+ITEMS : ITEM ("," _SEP? ITEM)*
+FUNCTION : VARNAME _SEP? "(" VARNAME ")"
