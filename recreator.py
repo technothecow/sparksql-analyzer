@@ -6,13 +6,16 @@ class Recreator:
         self.tree = tree.children[0]
 
     def recreate(self):
+        # проверка типа наивысшего правила
         if self.tree.data == 'create_database_or_schema':
+            # выделяем все поля, которые могут быть в запросе
             creation_type = None
             if_not_exists = False
             name = None
             comment = None
             location = None
             properties = None
+            # проходимся по дочерним правилам и терминалам, заполняя нужные поля
             for i in self.tree.children:
                 if isinstance(i, Tree):
                     if i.data == 'ifnotexists_clause':
@@ -30,6 +33,8 @@ class Recreator:
                     creation_type = i
                 else:
                     name = i
+
+            # формируем и возвращаем итоговый запрос, пропуская поля, для которых значения не было
             result = list()
             result.append(f"CREATE {creation_type}{' IF NOT EXISTS ' if if_not_exists else ' '}{name}")
             if comment is not None:
@@ -38,6 +43,7 @@ class Recreator:
                 result.append(f"\tLOCATION {location}")
             if properties is not None:
                 result.append(f"\tWITH DBPROPERTIES ({properties})")
+            result[-1] += ';'
             return '\n'.join(result)
-        else:
+        else: # вызываем исключение если запрос по данному правилу восстановить нельзя
             raise Exception("Given query can't be recreated!")

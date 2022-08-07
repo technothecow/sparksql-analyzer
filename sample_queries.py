@@ -80,5 +80,37 @@ SELECT last_name FROM employee;''',
     '''CReatE DATABASE IF NOT EXISTS 
     db_name comment 'sample comment' location 'path/to/the/file.db'
     with dbproperties(prop1=val1,prop2=val2);
-    '''
+    ''',
+    '''WITH 
+mnssnInfo AS
+(
+    SELECT SSN, 
+           UPPER(LAST_NAME), 
+           UPPER(FIRST_NAME), 
+           TAXABLE_INCOME,          
+           CHARITABLE_DONATIONS
+    FROM IRS_MASTER_FILE
+    WHERE STATE = 'MN'                 AND
+          TAXABLE_INCOME > 250000      AND
+          CHARITABLE_DONATIONS > 5000     
+),
+doltishApplicants AS
+(
+    SELECT SSN, SAT_SCORE, SUBMISSION_DATE
+    FROM COLLEGE_ADMISSIONS
+    WHERE SAT_SCORE < 100
+),
+todaysAdmissions AS
+(
+    SELECT doltishApplicants.SSN, 
+           TRUNC(SUBMISSION_DATE),  SUBMIT_DATE, 
+           LAST_NAME, FIRST_NAME, 
+           TAXABLE_INCOME
+    FROM mnssnInfo,
+         doltishApplicants
+    WHERE mnssnInfo.SSN = doltishApplicants.SSN
+)
+SELECT FIRST_NAME
+FROM todaysAdmissions
+WHERE SUBMIT_DATE = TRUNC(SYSDATE);'''
 ]
