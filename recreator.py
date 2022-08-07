@@ -40,4 +40,4 @@ class Recreator:
                 result.append(f"\tWITH DBPROPERTIES ({properties})")
             return '\n'.join(result)
         else:
-            raise Exception("That query can't be recreated!")
+            raise Exception("Given query can't be recreated!")
